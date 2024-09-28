@@ -7,21 +7,21 @@ import SEO from "../../components/shared/seo";
 import Flip from "react-reveal/Flip";
 import { GreyButton } from "../../components/style/styleComponent";
 import Bg from "../../images/blog/colorful-world.jpg";
-import { backgroundMovement } from "../../utils/hooks/backgroundMovement";
+import { useBackgroundMovement } from "../../utils/hooks/backgroundMovement";
 
-const blogTemplate = ({ data: { allMdx }, pageContext }) => {
+const BlogTemplate = ({ data: { allMdx }, pageContext }) => {
   const [tagMenu, toggleTagMenu] = useState(false);
 
   function handleTagMenu() {
     toggleTagMenu(!tagMenu);
 
     if (screen.width <= 1280 && tagMenu === false) {
-      var element = document.querySelector("#tagMenu");
+      let element = document.querySelector("#tagMenu");
       element.scrollIntoView();
     }
   }
 
-  backgroundMovement("blogBackground");
+  useBackgroundMovement("blogBackground");
 
   return (
     <>
@@ -44,7 +44,7 @@ const blogTemplate = ({ data: { allMdx }, pageContext }) => {
       >
         <div
           id="blogBackground"
-          className="absolute top-0 left-0 w-full h-full transform scale-110"
+          className="absolute top-0 left-0 w-full h-full scale-110"
           style={{
             background: `linear-gradient(0deg, rgba(255, 255, 255, 0.70), rgba(255, 255, 255, 0.70)), url(${Bg})`,
             backgroundPosition: "center",
@@ -98,9 +98,9 @@ const blogTemplate = ({ data: { allMdx }, pageContext }) => {
   );
 };
 
-export default blogTemplate;
+export default BlogTemplate;
 
-blogTemplate.propTypes = {
+BlogTemplate.propTypes = {
   pageContext: PropTypes.any,
   data: PropTypes.any
 };

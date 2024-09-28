@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore: [ master ]
   pull_request:
-    branches: [ '**' ]
+    branches: [ 'master', 'development' ]
     types: [         
       opened,
       synchronize,
@@ -12,36 +12,55 @@ on:
   workflow_dispatch:
     inputs:
       Name:   
+        description: 'A name for this re-run'
         required: true
         default: 'Re-run the workflow'
       Description:
+        description: 'A description for this re-run'
+        required: false
         default: ''  
 
 jobs:
+  Check-Duplicate:
+    runs-on: windows-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          skip_after_successful_duplicate: 'true'
+          concurrent_skipping: 'same_content_newer'
+          cancel_others: 'true'
+
   CI-Build:
+    needs: Check-Duplicate
+    if: ${{ needs.Check-Duplicate.outputs.should_skip != 'true' }}
     runs-on: windows-latest
     defaults:
       run:
         shell: bash
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: NPM Cache
-        id: npm-cache
-        uses: actions/cache@v2
+      - uses: actions/setup-node@v3
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-cache-
-          
+          node-version: '16'
+          cache: 'npm'
+      
+      - name: Output commit message
+        run: echo "${{ github.event.head_commit.message }}"
+
       # Retrieve gatsby cache
       # Creates new cache when OS/run_id changes
+      # Skip if the commit message contains text 'skip cache'
       - name: Gatsby Cache
+        if: "!contains(github.event.head_commit.message, 'skip cache')"
         id: gatsby-ci-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             public
@@ -53,12 +72,13 @@ jobs:
         uses: microsoft/playwright-github-action@v1
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       # Enable incremental build
       - name: Incremental build
-        run: NODE_OPTIONS=--max_old_space_size=4096 npm run build:noGA
+        run: npm run build:noGA
         env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
           EVENT_API_KEY_1: ${{ secrets.EVENT_API_KEY_1 }}
           EVENT_API_KEY_2: ${{ secrets.EVENT_API_KEY_2 }}
           EVENT_ORG_ID_1: ${{ secrets.EVENT_ORG_ID_1 }}
@@ -66,38 +86,88 @@ jobs:
           GATSBY_GH_APP_GITALK_ID: ${{ secrets.GATSBY_GH_APP_GITALK_ID }}
           GATSBY_GH_APP_GITALK_SECRET: ${{ secrets.GATSBY_GH_APP_GITALK_SECRET }}
           GATSBY_ENV: ${{ secrets.GATSBY_ENV }}
-          
+      
+      - name: Zip artifact for test
+        run: 7z a -t7z e2e.7z ./public/ -r
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: repo-artifact
+          path: e2e.7z
+          retention-days: 1
+
+  E2E-Test:
+    needs: CI-Build
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      # Retrieve gatsby cache
+      # Creates new cache when OS/run_id changes
+      # Skip if the commit message contains text 'skip cache'
+      - name: Gatsby Cache
+        if: "!contains(github.event.head_commit.message, 'skip cache')"
+        id: gatsby-ci-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            public
+            .cache
+          key: ${{ runner.os }}-gatsby-ci-${{ github.run_id }} 
+          restore-keys: ${{ runner.os }}-gatsby-ci-
+
+      - name: Install playwright dependencies
+        uses: microsoft/playwright-github-action@v1
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: repo-artifact
+      
+      - name: unzip artifact
+        run: 7z x e2e.7z -aoa
+
       - name: Serve and E2E test
-        run: npm run serve & npm run test:e2e
+        run: npm run serve & npm run test:e2e; tskill node
 
   Test:
+    needs: Check-Duplicate
+    if: ${{ needs.Check-Duplicate.outputs.should_skip != 'true' }}
     runs-on: windows-latest
     defaults:
       run:
         shell: bash
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: NPM Cache
-        id: npm-cache
-        uses: actions/cache@v2
+      - uses: actions/setup-node@v3
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-cache-
+          node-version: '16'
+          cache: 'npm'
 
       - name: Install playwright dependencies
         uses: microsoft/playwright-github-action@v1
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Jest cache
         id: gatsby-jest-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .jest-cache
           key: ${{ runner.os }}-jestCache-${{ github.run_id }}

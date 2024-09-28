@@ -4,40 +4,42 @@ on:
   push:
     branches: [ master ]
   schedule:
-    - cron: '0 5 * * *'
+    - cron: '0 5 * * 1,4'
   workflow_dispatch:
     inputs:
       Name:   
+        description: 'A name for this re-run'
         required: true
         default: 'Re-run the workflow'
       Description:
+        description: 'A description for this re-run'
+        required: false
         default: ''  
 
 jobs:
   deploy:
     name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     defaults:
       run:
         shell: bash
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
         
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: master
+          persist-credentials: false
       
-      - name: NPM Cache
-        id: npm-cache
-        uses: actions/cache@v2
+      - uses: actions/setup-node@v3
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-npm-cache-
+          node-version: '16'
+          cache: 'npm'
 
       - name: Gatsby Cache
+        if: "!contains(github.event.head_commit.message, 'skip cache')"
         id: gatsby-deploy-cache
         uses: actions/cache@v2
         with:
@@ -48,15 +50,26 @@ jobs:
           restore-keys: ${{ runner.os }}-gatsby-deploy-
       
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       - name: Set user info
         run: |
           git config --local user.email "support+actions@github.com"
           git config --local user.name "github-actions-bot"
+
+      - name: Semantic Release
+        run: HUSKY=0 npx semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: "github-actions-bot"
+          GIT_AUTHOR_EMAIL: "support+actions@github.com"
+          GIT_COMMITTER_NAME: "github-actions-bot"
+          GIT_COMMITTER_EMAIL: "support+actions@github.com"
         
-      - name: Deploy
-        run: npm run deploy
+      - name: Build
+        run: |
+          npm run build
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           EVENT_API_KEY_1: ${{ secrets.EVENT_API_KEY_1 }}
@@ -67,5 +80,50 @@ jobs:
           GATSBY_GH_APP_GITALK_SECRET: ${{ secrets.GATSBY_GH_APP_GITALK_SECRET }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GATSBY_ENV: ${{ secrets.GATSBY_ENV }}
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.GH_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./public
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+  
+  Post-Notification:
+    runs-on: windows-latest
+    needs: deploy
+    # https://docs.github.com/en/actions/learn-github-actions/contexts#needs-context
+    if: ${{ github.event_name != 'schedule' && always() && (needs.deploy.result == 'failure' || needs.deploy.result == 'success') }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Git info
+        run: echo "${{ github.event.commits[0].message }}"
+      - name: Webhook
+        # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+        run: |
+          curl --write-out '%{http_code}' \
+          --request POST \
+          --header 'Authorization: Basic ${{ secrets.WEBHOOK_TOKEN }}' \
+          --header 'Content-Type: application/json' \
+          --url '${{ secrets.WEBHOOK_URL }}' \
+          --data '{
+            "origin": "GitHub",
+            "project": "dataviz-hub",
+            "commit_title": "New release",
+            "commit_message": "${{ github.event.commits[0].message }}",
+            "commit_sha": "${{ github.sha }}",
+            "outcome": "${{ needs.deploy.result }}",
+            "run_url": "https://github.com/researchdata-sheffield/dataviz-hub2/actions/runs/${{ github.run_id }}",
+            "impact": "Low",
+            "benefit": "New release"
+          }'
+
+
+    
+
+
 
 

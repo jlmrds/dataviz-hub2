@@ -1,7 +1,7 @@
 import { Link } from "gatsby";
 import React from "react";
 import PropTypes from "prop-types";
-import university_logo from "../../images/TUOSlogo.png";
+import university_logo from "../../images/UOSLogo_Primary_White_RGB.svg";
 import { FaGoogle, FaSlack, FaRss } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { A_footer } from "../style/styleComponent";
@@ -130,6 +130,11 @@ const Footer = React.memo(({ className }) => {
           <div className="text-white text-md mb-2 font-bold">Collaboration</div>
           <ul className="list-reset leading-normal">
             <li>
+              <Link className={linkClasses} to="/changelog">
+                Changelog
+              </Link>
+            </li>
+            <li>
               <A_footer href="https://github.com/researchdata-sheffield/dataviz-hub2/issues">
                 Submit an Issue or feedback
               </A_footer>
@@ -140,12 +145,9 @@ const Footer = React.memo(({ className }) => {
               </A_footer>
             </li>
             <li>
-              <Link
-                className={linkClasses}
-                to="/docs/22/03/2020/contribute-blog-post"
-              >
-                Contribute blog posts
-              </Link>
+              <A_footer href="https://github.com/researchdata-sheffield/dataviz-hub2/blob/development/CONTRIBUTING.md">
+                Contributing
+              </A_footer>
             </li>
           </ul>
         </div>

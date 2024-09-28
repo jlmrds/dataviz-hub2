@@ -14,7 +14,7 @@ import { GrGroup, GrContactInfo } from "react-icons/gr";
 
 const HomeCommunity = () => {
   const cardClasses =
-    "w-4/5 md:w-1/3 lg:w-1/5 p-3 2xl:p-12 mt-10 transform hover:-translate-y-3 transition duration-500 group relative";
+    "w-4/5 md:w-1/3 lg:w-1/5 p-3 2xl:p-12 mt-10 hover:-translate-y-3 transition duration-500 group relative";
   const cardTextClasses =
     "text-sm xl:text-base border-t-1 border-gray-300 py-3 text-gray-600 group-hover:text-gray-900";
   const buttonClasses = "rounded-md text-xs lg:text-sm mt-5 lg:mt-10";
@@ -42,7 +42,7 @@ const HomeCommunity = () => {
       <Fade>
         <div className="container mx-auto justify-center flex flex-wrap pt-36">
           <div className="text-4xl xl:text-5xl 2xl:text-6xl font-bold text-gray-900 w-full text-center px-4">
-            <h1 style={{ fontFamily: "TUOS Stephenson,Georgia,Times,serif" }}>
+            <h1 style={{ fontFamily: "Source Serif Pro, serif" }}>
               YOUR COMMUNITY.{" "}
             </h1>
           </div>
@@ -93,7 +93,7 @@ const HomeCommunity = () => {
               dataviz team to help you make the most of your data.
             </div>
             <ArrowButton
-              className={`${buttonClasses} group-hover:bg-brand-blue`}
+              className={`${buttonClasses} group-hover:bg-brand-blue group-hover:text-brand-black`}
             >
               Coming soon
             </ArrowButton>

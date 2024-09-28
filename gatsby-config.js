@@ -15,11 +15,26 @@ module.exports = {
   },
   plugins: [
     {
-      resolve: `gatsby-plugin-google-analytics`,
+      // https://www.gatsbyjs.com/plugins/gatsby-plugin-google-gtag/
+      resolve: `gatsby-plugin-google-gtag`,
       options: {
-        trackingId: process.env.QA_ENV ? "289653096" : "UA-165060977-1",
-        head: true,
-        enableWebVitalsTracking: true
+        // You can add multiple tracking ids and a pageview event will be fired for all of them.
+        // This is the measurement ID in GA4
+        trackingIds: [process.env.QA_ENV ? "G-9F9DQR2Q4S" : "G-C49ZZFBML4"],
+        // This config will be shared across all trackingIds
+        gtagConfig: {
+          // Some countries (such as Germany) require you to use the _anonymizeIP
+          anonymize_ip: true,
+          cookie_expires: 0,
+          enable_web_vitals_tracking: true
+        },
+        // This object is used for configuration specific to this plugin
+        pluginConfig: {
+          // Puts tracking script in the head instead of the body
+          head: true,
+          // Respect do not track setting from user's browser
+          respectDNT: true
+        }
       }
     },
     `gatsby-plugin-image`,
@@ -38,7 +53,7 @@ module.exports = {
       options: {
         name: `blog`,
         path: `${__dirname}/content/blog`,
-        ignore: [`/^[^.]+$|.(?!(js)$)([^.]+$)/`]
+        ignore: [`/^[^.]+$|.(?!(js|exe)$)([^.]+$)/`, `**/*/*.json`]
       }
     },
     {
@@ -46,7 +61,7 @@ module.exports = {
       options: {
         name: `docs`,
         path: `${__dirname}/content/docs`,
-        ignore: [`/^[^.]+$|.(?!(js|exe)$)([^.]+$)/`]
+        ignore: [`/^[^.]+$|.(?!(js|exe)$)([^.]+$)/`, `**/*/*.json`]
       }
     },
     {
@@ -54,7 +69,7 @@ module.exports = {
       options: {
         name: `visualisation`,
         path: `${__dirname}/content/visualisation`,
-        ignore: [`/^[^.]+$|.(?!(js|exe)$)([^.]+$)/`]
+        ignore: [`/^[^.]+$|.(?!(js|exe)$)([^.]+$)/`, `**/*/*.json`]
       }
     },
     {
@@ -178,12 +193,11 @@ module.exports = {
       }
     },
     `gatsby-plugin-styled-components`,
-    `babel-plugin-styled-components`,
     `gatsby-plugin-emotion`,
     `gatsby-plugin-instagram-embed`,
     {
       resolve: `gatsby-source-eventbrite-multi-accounts`,
-      //resolve: `../gatsby-source-eventbrite-multi-accounts`, // local plugin test
+      //resolve: require.resolve(`../gatsby-source-eventbrite-multi-accounts`), // local plugin test
       options: {
         organisations: [
           {
@@ -207,11 +221,18 @@ module.exports = {
         background_color: `#ffffff`,
         theme_color: `#ffffff`,
         display: `minimal-ui`,
-        icon: `src/images/icon.png`, // This path is relative to the root of the site.
+        icon: `src/images/Favicon_128x128.png`, // This path is relative to the root of the site.
         cache_busting_mode: "none" // Work with offline plugin
       }
     },
-    `gatsby-plugin-offline`, // should be listed after the manifest plugin
+    {
+      resolve: `gatsby-plugin-offline`,
+      options: {
+        workboxConfig: {
+          maximumFileSizeToCacheInBytes: 20971520
+        }
+      }
+    }, // should be listed after the manifest plugin
     "gatsby-plugin-postcss",
     /***************** FLEXSEARCH ********************/
     {
@@ -330,6 +351,19 @@ module.exports = {
               depth: 1
             },
             store: true
+          },
+          {
+            name: "date",
+            indexed: true,
+            resolver: "frontmatter.date",
+            attributes: {
+              tokenize: "full",
+              encode: "extra",
+              threshold: 1,
+              resolution: 12,
+              depth: 1
+            },
+            store: true
           }
         ]
       }
@@ -423,7 +457,23 @@ module.exports = {
       }
     },
     /*********** END RSS Feed ************* */
-    `gatsby-plugin-sass`,
+    {
+      resolve: `gatsby-plugin-sass`,
+      options: {
+        implementation: require("sass"),
+        // globally expose the contents to each sass file
+        additionalData: `@use "./src/css/_variables" as var;`
+      }
+    },
+    {
+      resolve: "gatsby-plugin-webpack-bundle-analyser-v2",
+      options: {
+        devMode: false,
+        openAnalyzer: false,
+        analyzerMode: "static",
+        reportFilename: "webpack-report.html"
+      }
+    },
     `gatsby-plugin-sitemap`,
     `gatsby-plugin-meta-redirect` // make sure to put last in the array
   ]

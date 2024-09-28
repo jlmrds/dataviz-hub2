@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import SEO from "../shared/seo";
 import { Link } from "gatsby";
 import { getImageSource } from "../../utils/shared";
-import { VisItem } from "../style/visStyle";
+import { VisGrid, VisItem } from "../style/visStyle";
 import Fade from "react-reveal/Fade";
-import UniversityIcon from "../../images/TUOS_PRIMARY_LOGO_LINEAR_BLACK.png";
+import UniversityIcon from "../../images/UOSLogo_Primary_White_RGB.svg";
 import WordCloud from "./wordCloud";
 import VisUtils from "./visUtils";
 
@@ -17,7 +17,7 @@ import VisUtils from "./visUtils";
  * @param {Object} pageContext Other page related information
  * @returns
  */
-const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
+const VisLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
   const [tagMenu, setTagMenu] = useState(false);
 
   // category & tag will pass a title
@@ -54,7 +54,7 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
   }
 
   return (
-    <div className="bg-gray-900">
+    <div className="bg-brand-black">
       <SEO
         title={`${pageTitle} Visualisation`}
         keywords={[
@@ -111,11 +111,8 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
         </button>
       </div>
 
-      <div className="min-h-80 flex flex-wrap justify-center pt-24 pb-32 bg-gray-900 px-5">
-        <div
-          className="max-w-8xl w-full md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1"
-          style={{ gridAutoFlow: "dense", gridTemplateRows: "min-content" }}
-        >
+      <div className="min-h-80 flex flex-wrap justify-center pt-24 pb-32 bg-brand-black px-5">
+        <VisGrid>
           {currentMDXs.length > 0 &&
             currentMDXs.map(({ node }) => {
               let imagesrc = getImageSource(node, true);
@@ -124,46 +121,21 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
 
               return (
                 <Link
+                  className="__outer shadow-xl visualisationColourBorder"
                   to={node.fields.slug}
                   key={node.id}
                   style={{
                     gridRow: `span ${rowSpan}`,
                     gridColumn: `span ${columnSpan}`
                   }}
-                  className="shadow-xl rounded-xl visualisationColourBorder"
                 >
                   {/* university logo on loading */}
-                  <img
-                    src={UniversityIcon}
-                    style={{
-                      maxWidth: "100px",
-                      left: "50%",
-                      top: "50%",
-                      transform: "translate(-50%, -50%)"
-                    }}
-                    className="absolute"
-                  />
+                  <img src={UniversityIcon} className="__loading-image" />
                   {/* visualisation */}
                   <Fade delay={1000}>
                     <VisItem row={rowSpan} col={columnSpan}>
-                      <div
-                        className="rounded-xl md:absolute md:top-0 md:left-0"
-                        style={{
-                          height: "100%",
-                          width: "100%",
-                          backgroundImage: `linear-gradient(135deg, #141e30 0%,#152033 6%,#20344c 65%,#243b55 100%)`,
-                          backgroundRepeat: "no-repeat"
-                        }}
-                      >
+                      <div className="__inner">
                         <img
-                          style={{
-                            height: "100%",
-                            width: "100%",
-                            objectFit: "cover",
-                            objectPosition: "center",
-                            transition: ".2s ease-out"
-                          }}
-                          className="rounded-xl"
                           src={imagesrc}
                           alt={"Visualisation: " + node.frontmatter.title}
                         />
@@ -174,37 +146,16 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
               );
             })}
 
-          <div
-            id="visualisation-invite"
-            style={{
-              gridRow: "span 1",
-              gridColumn: "span 1",
-              visibility: "hidden"
-            }}
-          >
+          <div id="visualisation-invite">
             <Fade delay={1000}>
               <VisItem row={1} col={1}>
-                <div
-                  className="group rounded-xl relative md:absolute md:top-0 md:left-0 text-center flex"
-                  style={{
-                    height: "100%",
-                    width: "100%",
-                    backgroundImage:
-                      "linear-gradient(135deg, #141e30 0%,#152033 6%,#20344c 65%,#243b55 100%)",
-                    backgroundRepeat: "no-repeat"
-                  }}
-                >
+                <div className="__wrap">
                   <h1 className="text-gray-300 font-bold m-auto">
                     Add your visualisations here
                   </h1>
                   <Link
                     to="/docs/21/07/2021/Contribute-visualisation"
-                    className="absolute text-sm text-gray-200 font-bold cursor-pointer bg-gray-600 rounded-md py-1 px-2 hidden group-hover:block"
-                    style={{
-                      transform: "translate(-50%, 0%)",
-                      left: "50%",
-                      top: "70%"
-                    }}
+                    className="text text-gray-200 bg-gray-600"
                   >
                     Learn how
                   </Link>
@@ -212,7 +163,7 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
               </VisItem>
             </Fade>
           </div>
-        </div>
+        </VisGrid>
         <div ref={nextPageRef} style={{ height: "100px", width: "100%" }}></div>
       </div>
       <div className="text-center text-gray-600 pb-5 text-sm">
@@ -231,9 +182,11 @@ const visLayout = ({ currentMDXs, nextPageRef, title, pageContext }) => {
   );
 };
 
-export default visLayout;
+export default VisLayout;
 
-visLayout.propTypes = {
+VisLayout.propTypes = {
   currentMDXs: PropTypes.any,
-  nextPageRef: PropTypes.any
+  nextPageRef: PropTypes.any,
+  title: PropTypes.string,
+  pageContext: PropTypes.object
 };

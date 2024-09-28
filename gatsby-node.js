@@ -11,56 +11,33 @@ const readingTime = require("reading-time");
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 const fs = require("fs");
 
-exports.onPostBuild = async ({ graphql }) => {
-  const { data } = await graphql(`
-    {
-      pages: allSitePage {
-        nodes {
-          path
-        }
-      }
-    }
-  `);
-
-  const paths = data.pages.nodes.map((item) => item.path);
-
-  return fs.promises
-    .writeFile("./tests/websitePaths.json", JSON.stringify(paths))
-    .then(() =>
-      console.log(
-        "Success [/tests/websitePaths.json]: Paths stored in websitePaths.json."
-      )
-    )
-    .catch((error) =>
-      console.log("Failed [/tests/websitePaths.json]: ", error)
-    );
-};
-
 exports.onCreateWebpackConfig = ({ actions, stage, loaders }) => {
-  actions.setWebpackConfig({
+  const webpackConfig = {
     plugins: [new NodePolyfillPlugin()],
     resolve: {
       fallback: {
         fs: false
+      },
+      alias: {
+        "@utils": path.resolve(__dirname, "src/utils")
       }
+    },
+    module: {
+      rules: []
     }
-  });
+  };
 
-  if (stage === "build-html") {
-    actions.setWebpackConfig({
-      module: {
-        rules: [
-          {
-            /* prevent error from canvas used by trianglify:
-             * error Generating SSR bundle failed Unexpected character '' (1:0)
-             */
-            test: /canvas/,
-            use: loaders.null()
-          }
-        ]
-      }
+  if (stage === "develop-html" || stage === "build-html") {
+    webpackConfig.module.rules.push({
+      /* prevent error from canvas used by trianglify:
+       * error Generating SSR bundle failed Unexpected character '' (1:0) & (1:2)
+       */
+      test: /canvas/,
+      use: loaders.null()
     });
   }
+
+  actions.setWebpackConfig(webpackConfig);
 };
 
 /**
@@ -117,7 +94,7 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
  *  Create pages from MDX files
  */
 exports.createPages = async ({ graphql, actions, reporter }) => {
-  console.log("----------------------------------------------------");
+  console.log("----------------gatsby-node.js---------------------");
   console.log(`Environment: ${process.env.GATSBY_ENV}`);
   console.log("MESSAGE: Creating pages from MDX files ...");
   // De-structure the createPage function from the actions object
@@ -350,12 +327,12 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
    */
   console.log("MESSAGE: Creating blog post routes ...");
   console.log("----------------------------------------------------");
-  const posts = result.data.allMdx.edges.filter((obj) => {
+  let posts = result.data.allMdx.edges.filter((obj) => {
     return obj.node.frontmatter.type == null;
   });
 
   const POSTS_PER_PAGE = 12;
-  var numPages = posts.length;
+  let numPages = posts.length;
   const categories = [];
   const tags = [];
 
@@ -364,7 +341,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 
   // Call `createPage` for each result/post
   posts.forEach(({ node }, index, arr) => {
-    var excluded = false;
+    let excluded = false;
 
     // For each post, add their tags/categories to arrays
     node.frontmatter.category &&
@@ -506,4 +483,32 @@ exports.createSchemaCustomization = ({ actions }) => {
     }
   `;
   createTypes(typeDefs);
+};
+
+/**
+ * Post build tasks
+ */
+exports.onPostBuild = async ({ graphql }) => {
+  const { data } = await graphql(`
+    {
+      pages: allSitePage {
+        nodes {
+          path
+        }
+      }
+    }
+  `);
+
+  const paths = data.pages.nodes.map((item) => item.path);
+
+  return fs.promises
+    .writeFile("./tests/websitePaths.json", JSON.stringify(paths))
+    .then(() =>
+      console.log(
+        "Success [/tests/websitePaths.json]: Paths stored in websitePaths.json."
+      )
+    )
+    .catch((error) =>
+      console.log("Failed [/tests/websitePaths.json]: ", error)
+    );
 };

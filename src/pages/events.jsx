@@ -8,7 +8,7 @@ import PastEventsBlog from "../components/events/pastEventsBlog";
 import moment from "moment";
 import { calculateUserLocalTime } from "../utils/shared";
 
-const events = ({ data: { eventBrite, pastEvent, pastEventBlog } }) => {
+const Events = ({ data: { eventBrite, pastEvent, pastEventBlog } }) => {
   const UPDATE_TIME_MS = 30000;
   const [currentDate, setDate] = useState(
     moment().format("ddd DD MMMM YYYY, hh:mm A")
@@ -37,7 +37,7 @@ const events = ({ data: { eventBrite, pastEvent, pastEventBlog } }) => {
         ]}
       />
       <div
-        className="flex flex-wrap flex-grow-0 items-center justify-center min-h-100"
+        className="flex flex-wrap grow-0 items-center justify-center min-h-100"
         style={{
           backgroundColor: "rgb(255,121,180)",
           backgroundImage:
@@ -72,13 +72,13 @@ const events = ({ data: { eventBrite, pastEvent, pastEventBlog } }) => {
   );
 };
 
-export default events;
+export default Events;
 
-events.propTypes = {
+Events.propTypes = {
   data: PropTypes.any
 };
 
-export const query = graphql`
+export const eventQuery = graphql`
   query {
     eventBrite: allEventbriteEvents(
       limit: 4

@@ -1,15 +1,15 @@
+const colors = require("tailwindcss/colors");
+
 // See https://tailwindcss.com/docs/configuration for details
 module.exports = {
-  mode: "jit",
   important: "#website", //Make tailwind have highest specificity over other styling plugin (e.g. styled components)
-  purge: {
-    content: [
-      "./src/**/*.{jsx, js}",
-      "./content/**/*.jsx",
-      "./content/**/*.mdx",
-      "./content/**/*.js"
-    ]
-  },
+  content: [
+    "./src/components/**/*.{jsx,js}", //no spaces between commas
+    "./src/pages/**/*.{jsx,js}",
+    "./src/templates/**/*.{jsx,js}",
+    "./content/**/*.{jsx,mdx,md}"
+  ],
+
   theme: {
     extend: {
       screens: {
@@ -17,11 +17,18 @@ module.exports = {
         xl: "1280px",
         "2xl": "1441px"
       },
+      colors: {
+        green: colors.emerald,
+        yellow: colors.amber,
+        purple: colors.violet
+      },
       backgroundColor: {
         footer: "#414042",
         highlight: "#1cbfff",
-        "brand-blue": "#00aeef",
+        "brand-blue": "#9ADBE8",
         "brand-pink": "#ff79b4",
+        "brand-black": "#131E29",
+        "brand-purple": "#440099",
         light_grey: "#f1f1f1",
         light_black: "rgba(0,0,0, .6)",
         "black-10": "rgba(0, 0, 0, .1)",
@@ -39,8 +46,10 @@ module.exports = {
         sheflightBlue: "#ade1f8"
       },
       borderColor: {
-        "brand-blue": "#00aeef",
+        "brand-blue": "#9ADBE8",
         "brand-pink": "#ff79b4",
+        "brand-black": "#131E29",
+        "brand-purple": "#440099",
         menu_red: "#ff5e5e",
         menu_yellow: "#f3f218",
         menu_green: "#99f318",
@@ -71,9 +80,6 @@ module.exports = {
         c1: "0px 12px 15px 0px #C8C4C1",
         c2: "0px 12.3px 15.37px 0px #3A3631"
       },
-      fontFamily: {
-        stephenson: ["TUOS Stephenson", "Georgia", "Times", "serif"]
-      },
       fontSize: {
         xxs: ".65rem",
         med: ".94rem"
@@ -85,13 +91,9 @@ module.exports = {
         "60px": "60px"
       },
       margin: {
-        "-3": "-0.75rem",
-        "-9": "-2.25rem",
-        "-12": "-3rem",
-        "-14": "-3.5rem",
-        "-18": "-4.5rem",
-        "-36": "-9rem",
-        "-60": "-15rem",
+        3: "0.75rem",
+        9: "2.25rem",
+        12: "3rem",
         7: "1.75rem",
         14: "3.5rem",
         18: "4.5rem",
@@ -187,11 +189,7 @@ module.exports = {
         74: "18.5rem",
         78: "19.5rem",
         82: "20.5rem",
-        86: "21.5rem",
-        full: "100%",
-        full2: "200%",
-        full3: "300%",
-        full4: "400%"
+        86: "21.5rem"
       },
       scale: {
         170: "1.7",
@@ -203,7 +201,9 @@ module.exports = {
       },
       textColor: {
         highlight: "#337ab7",
-        "brand-blue": "#00aeef",
+        "brand-blue": "#9ADBE8",
+        "brand-black": "#131E29",
+        "brand-purple": "#440099",
         shefBlue: "#0066b3",
         shefPurple: "#251d5a",
         shefYellow: "#fedf00",
@@ -240,117 +240,5 @@ module.exports = {
         "-10": "-10"
       }
     }
-  },
-  variants: {
-    textColor: [
-      "responsive",
-      "focus",
-      "group-focus",
-      "group-hover",
-      "hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    backgroundColor: [
-      "responsive",
-      "focus",
-      "active",
-      "group-focus",
-      "group-hover",
-      "hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    borderColor: [
-      "responsive",
-      "group-hover",
-      "hover",
-      "focus",
-      "group-focus",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    borderWidth: [
-      "responsive",
-      "group-hover",
-      "hover",
-      "focus",
-      "group-focus",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    fontWeight: ["group-hover", "first", "last", "odd", "even"],
-    fontSize: [
-      "responsive",
-      "hover",
-      "focus",
-      "group-hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    display: ["responsive", "group-hover", "hover", "focus", "group-focus"],
-    opacity: ["responsive", "group-hover", "focus", "group-focus", "hover"],
-    zIndex: ["responsive", "hover", "focus", "group-focus", "group-hover"],
-    scale: [
-      "responsive",
-      "focus",
-      "active",
-      "group-focus",
-      "hover",
-      "group-hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    transitionDuration: ["responsive", "focus", "group-hover", "hover"],
-    transitionProperty: ["responsive", "focus", "group-hover", "hover"],
-    transitionTimingFunction: ["responsive", "hover", "focus", "group-hover"],
-    minHeight: [
-      "responsive",
-      "hover",
-      "focus",
-      "group-focus",
-      "group-hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    maxHeight: [
-      "responsive",
-      "hover",
-      "focus",
-      "group-focus",
-      "group-hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    greyScale: ["responsive", "hover", "focus", "group-focus", "group-hover"],
-    translate: [
-      "responsive",
-      "hover",
-      "focus",
-      "group-focus",
-      "active",
-      "group-hover",
-      "first",
-      "last",
-      "odd",
-      "even"
-    ],
-    visibility: ["responsive", "group-hover", "hover", "focus", "group-focus"]
   }
 };
